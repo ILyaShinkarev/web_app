@@ -1,14 +1,16 @@
 
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
-import { validationResult } from 'express-validator';
 
 import {registerValidation} from './validations/auth.js';
 
-// import UserModel from './models/user.js'; // error
+import checkAuth from './utils/checkAuth.js';
 
-mongoose.connect('mongodb+srv://bkleon96:123@web.iabef27.mongodb.net/?retryWrites=true&w=majority')
+import * as UserController  from './controllers/UserController.js';
+
+mongoose.connect('mongodb+srv://bkleon96:123@web.iabef27.mongodb.net/blog?retryWrites=true&w=majority')
 .then(() => console.log('Db OK'))
 .catch((err) => console.log('Db error',err));
 
@@ -16,24 +18,9 @@ const app = express();
 
 app.use(express.json());
 
-app.post('/auth/register',registerValidation,(req,res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json(errors.array());
-    }
-
-    const doc = new UserModel({
-        email: req.body.email,
-        fullname: req.body.fullname,
-        avatarUrl: req.body.avatarUrl,
-        passwordHash: req.body.password
-    });
-
-    res.json({
-        success: true,
-    });
-
-});
+app.post('/auth/login', UserController.login);
+app.post('/auth/register',registerValidation, UserController.register);
+app.get('/auth/me', checkAuth, UserController.getMe);
 
 app.listen(4444,(err) => {
 
@@ -43,5 +30,3 @@ app.listen(4444,(err) => {
 
     console.log('Server OK');
 });
-
-
